@@ -34,7 +34,7 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
         strcpy(hrLine1, lows[currentTime.Hour]);
       } else if (currentTime.Hour < 20) {
         strcpy(hrLine1, teensone[currentTime.Hour - 9]);
-        if (currentTime.Hour > 12) {
+        if (currentTime.Hour > 10) {
           strcpy(hrLine2, teenstwo[currentTime.Hour % 10]);
         }
       } else {
