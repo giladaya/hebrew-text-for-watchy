@@ -1,29 +1,73 @@
 #include <Watchy.h> //include the Watchy library
 #include <Fonts/FreeSerifBold9pt7b.h>
-#include "HebSerif_Norm50pt7b.h"
+#include "FrankRuhlLibre_Regular44pt8b.h"
+#include "FrankRuhlLibre_Bold44pt8b.h"
+#include "HebrewAsciiCodes.h"
 
 #define TWELVE_HOURS true
 #define MAX_CHARS 20
 #define MARGIN_X 8
+#define Y_ADVANCE 48
 
-#define ALEPH 128
-#define BET 129
-#define GIMEL 130
-#define DALET 131
-#define HEH 132
-#define VAV 133
+char *marks [8] = {"", "!", "?", ".", "...", ":", ",", "-"};
+char * getRandomMark (int maxIdx = 8) {
+  return marks[random(min(maxIdx, 8))];
+}
+
+void addMark(char * line1, char * line2, int maxIdx = 999) {
+  if (strlen(line2) == 0) {
+    char temp[MAX_CHARS];
+    strcpy(temp, getRandomMark(maxIdx));
+    strcat(temp, line1);
+    strcpy(line1, temp);
+  } else {
+    char temp[MAX_CHARS];
+    strcpy(temp, getRandomMark(maxIdx));
+    strcat(temp, line2);
+    strcpy(line2, temp);
+  }
+}
 
 class WatchFace : public Watchy { //inherit and extend Watchy class
   public:
     void drawWatchFace() { //override this method to customize how the watch face looks
       uint16_t lines = 0;
 
-      //const char *units [11] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
-      const char *units [11] = {"xpt", ",jt", "ohh,a", "auka", "gcrt", "anj", "aa", "gca", "vbuna", "ga,", "rag"};
-      //const char *tens [10] = {"zero", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"};
-      const char *tens [10] = {"xpt", "rag", "ohrag", "ohauka", "ohgcrt", "ohahnj", "ohaha", "ohgca", "ohbuna", "ohga,"};
-      //const char *unitsMinutes [11] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
-      const char *unitsMinutes [11] = {"xpt", ",jt", "h,a", "auka", "gcrt", "anj", "aa", "gca", "vbuna", "ga,", "rag"};
+      // words
+      char zero[] = {SAMEKH, PE, ALEPH, 0};
+      char one[] = {TAV, HET, ALEPH, 0};
+      char two[] = {MEM_FIN, YOD, TAV, SHIN, 0};
+      char three[] = {SHIN, VAV, LAMED, SHIN, 0};
+      char four[] = {AYIN, BET, RESH, ALEPH, 0};
+      char five[] = {SHIN, MEM, HET, 0};
+      char six[] = {SHIN, SHIN, 0};
+      char seven[] = {AYIN, BET, SHIN, 0};
+      char eight[] = {HEH, NUN, VAV, MEM, SHIN, 0};
+      char nine[] = {AYIN, SHIN, TAV, 0};
+      char ten[] = {RESH, SHIN, AYIN, 0};
+      char twenty[] = {MEM_FIN, YOD, RESH, SHIN, AYIN, 0};
+      char thirty[] = {MEM_FIN, YOD, SHIN, VAV, LAMED, SHIN, 0};
+      char forty[] = {MEM_FIN, YOD, AYIN, BET, RESH, ALEPH, 0};
+      char fifty[] = {MEM_FIN, YOD, SHIN, YOD, MEM, HET, 0};
+      char sixty[] = {MEM_FIN, YOD, SHIN, YOD, SHIN, 0};
+      char seventy[] = {MEM_FIN, YOD, AYIN, BET, SHIN, 0};
+      char eighty[] = {MEM_FIN, YOD, NUN, VAV, MEM, SHIN, 0};
+      char ninety[] = {MEM_FIN, YOD, AYIN, SHIN, TAV, 0};
+      char twoOf[] = {YOD, TAV, SHIN, 0};
+      char teen[] = {HEH, RESH, SHIN, AYIN, 0};
+      char plus[] = {VAV, 0};
+      char midnight[] = {TAV, VAV, TSADI, HET, 0};
+      char minutes[] = {TAV, VAV, QOF, DALET, 0};
+
+      char aMinute[] = {HEH, QOF, DALET, VAV, 0};
+      char quarter[] = {AYIN, BET, RESH, VAV, 0};
+      char half[] = {YOD, TSADI, HET, VAV, 0};
+      char exactly[] = {QOF, VAV, YOD, DALET, BET, 0};
+
+      // word arrays
+      const char *units [11] = {zero, one, two, three, four, five, six, seven, eight, nine, ten};
+      const char *tens [10] = {zero, ten, twenty, thirty, forty, fifty, sixty, seventy, eighty, ninety};
+      const char *unitsMinutes [11] = {zero, one, twoOf, three, four, five, six, seven, eight, nine, ten};
 
       // Full refresh every 10 minutes
       if (currentTime.Minute % 10 == 1) {
@@ -37,7 +81,7 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
 
       // HOURS
       if (currentTime.Hour == 0) {
-        strcpy(hrLine1, ",umj"); // Midnight
+        strcpy(hrLine1, midnight); // Midnight
       } else {
         uint8_t normHour;
         if (TWELVE_HOURS && currentTime.Hour > 12) {
@@ -45,52 +89,54 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
         } else {
           normHour = currentTime.Hour;
         }
-        
+
         if (normHour < 11) {
           strcpy(hrLine1, units[normHour]);
         } else if (normHour < 20) {
           strcpy(hrLine1, units[normHour - 10]);
-          strcpy(hrLine2, "vrag"); //teen
+          strcpy(hrLine2, teen); //teen
         } else {
           strcpy(hrLine1, tens[normHour / 10]);
           if (normHour % 10 > 0) {
             strcpy(hrLine2, units[normHour % 10]);
-            strcat(hrLine2, "u"); // and
+            strcat(hrLine2, plus); // and
           }
         }
       }
+      addMark(hrLine1, hrLine2);
 
       // MINUTES
       // special cases
       if (currentTime.Minute == 0) {
-        strcpy(mnLine1, "euhsc"); // exactly
+        strcpy(mnLine1, exactly); // exactly
       } else if (currentTime.Minute == 1) {
-        strcpy(mnLine1, "vesu"); // and a minute
+        strcpy(mnLine1, aMinute); // and a minute
       } else if (currentTime.Minute == 15 && currentTime.Hour % 3 == 0) {
-        strcpy(mnLine1, "gcru"); // and a quarter
+        strcpy(mnLine1, quarter); // and a quarter
       } else if (currentTime.Minute == 30 && currentTime.Hour % 2 == 0) {
-        strcpy(mnLine1, "hmju"); // and a half
-      
-      // Other cases
+        strcpy(mnLine1, half); // and a half
+
+        // Other cases
       } else if (currentTime.Minute < 11) {
         strcpy(mnLine1, unitsMinutes[currentTime.Minute]);
-        strcat(mnLine1, "u"); // and
-        strcpy(mnLine2, ",ues"); // minutes
+        strcat(mnLine1, plus); // and
+        strcpy(mnLine2, minutes); // minutes
       } else if (currentTime.Minute < 20) {
         strcpy(mnLine1, units[currentTime.Minute - 10]);
-        strcat(mnLine1, "u");
-        strcpy(mnLine2, "vrag"); //teen
+        strcat(mnLine1, plus);
+        strcpy(mnLine2, teen); //teen
       } else {
         if (currentTime.Minute % 10 > 0) {
           strcpy(mnLine1, tens[currentTime.Minute / 10]);
           strcpy(mnLine2, units[currentTime.Minute % 10]);
-          strcat(mnLine2, "u"); // and
+          strcat(mnLine2, plus); // and
         } else {
           strcpy(mnLine1, tens[currentTime.Minute / 10]);
-          strcat(mnLine1, "u"); // and
-          strcpy(mnLine2, ",ues"); // minutes
+          strcat(mnLine1, plus); // and
+          strcpy(mnLine2, minutes); // minutes
         }
       }
+      addMark(mnLine1, mnLine2, 5);
 
       //drawbg
       display.fillScreen(GxEPD_WHITE);
@@ -100,9 +146,11 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
 
       // Tests
       //display.drawBitmap(175, 150, epd_bitmap_aleph, 25, 50, GxEPD_BLACK); //test image
-      //display.setFont(&epd_bitmap_Font);
-      //display.setCursor(8, 200-5);
-      //display.print("ruthk");
+      //display.setFont(&frankRuhl_Font);
+      //display.setCursor(100, 200 - 5);
+      //display.print("~abaruthk");
+      //char str[20] = {129, 'A', 'C', 67, 0, 0};
+      //display.print(str);
 
       //drawtime
       int16_t  x1, y1;
@@ -112,32 +160,30 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
 
       // HOURS
       lines += 1;
-      // display.setFont(&NunitoSans_Bold28pt7b);
-      display.setFont(&epd_bitmap_Font);
+      display.setFont(&FrankRuhlLibre_Regular44pt8b);
 
       display.getTextBounds(hrLine1, 0, 0, &x1, &y1, &w, &h);
-      display.setCursor(display.width() - MARGIN_X - w, lines * 47 - 5);
+      display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
       display.print(hrLine1);
 
       if (strlen(hrLine2) > 0) {
         lines += 1;
         display.getTextBounds(hrLine2, 0, 0, &x1, &y1, &w, &h);
-        display.setCursor(display.width() - MARGIN_X - w, lines * 47 - 5);
+        display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
         display.print(hrLine2);
       }
 
       // MINUTES
       lines += 1;
-      //display.setFont(&frankRuhl_Font);
-      display.setFont(&epd_bitmap_Font);
+      display.setFont(&FrankRuhlLibre_Bold44pt8b);
 
       display.getTextBounds(mnLine1, 0, 0, &x1, &y1, &w, &h);
-      display.setCursor(display.width() - MARGIN_X - w, lines * 47 - 5);
+      display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
       display.print(mnLine1);
       if (strlen(mnLine2) > 0) {
         lines += 1;
         display.getTextBounds(mnLine2, 0, 0, &x1, &y1, &w, &h);
-        display.setCursor(display.width() - MARGIN_X - w, lines * 47 - 5);
+        display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
         display.print(mnLine2);
       }
 
@@ -153,6 +199,7 @@ WatchFace m; //instantiate your watchface
 
 void setup() {
   m.init(); //call init in setup
+  randomSeed(m.getBatteryVoltage());
 }
 
 void loop() {
