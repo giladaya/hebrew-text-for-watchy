@@ -385,7 +385,13 @@
 									<div class="table-row">
 										<div class="table-cell"><label>First ASCII character (dec):</label></div>
 										<div class="table-cell">
-											<input id="first-ascii-char" class="text-input" type="text" name="first-ascii-char" onchange="" value="97"/>
+											<input id="first-ascii-char" class="text-input" type="text" name="first-ascii-char" onchange="" value="32"/>
+										</div>
+									</div>
+									<div class="table-row">
+										<div class="table-cell"><label>Last ASCII character (dec):</label></div>
+										<div class="table-cell">
+											<input id="last-ascii-char" class="text-input" type="text" name="last-ascii-char" onchange="" value="126"/>
 										</div>
 									</div>
 									<div class="table-row">
@@ -623,8 +629,17 @@
 		// An images collection with helper methods
 		function Images() {
 			var collection = [];
-			this.push = function(img, canvas, glyph) {
-				collection.push({ "img" : img, "canvas" : canvas, "glyph" : glyph });
+			this.push = function(img, canvas, name) {
+				const glyphCode = parseInt(name);
+				let glyph;
+				if (isNaN(glyphCode)) {
+					glyph = name.charAt(0);
+				} else {
+					glyph = String.fromCharCode(glyphCode);
+				}
+				const item = { img, canvas, glyph, name }
+				collection.push(item);
+				return item;
 			};
 			this.remove = function(image) {
 				var i = collection.indexOf(image);
@@ -993,10 +1008,13 @@
 							gil.innerHTML = "glyph";
 							gil.className = "file-info";
 
+							const imageData = images.push(img, canvas, file.name.split(".")[0]);
+
 							var gi = document.createElement("input");
 							gi.type = "text";
 							gi.name = "glyph";
 							gi.className = "glyph-input";
+							gi.value = imageData.glyph;
 							gi.onchange = function() {
 								var image = images.get(img);
 								image.glyph = gi.value;
@@ -1036,7 +1054,7 @@
 							canvas.height = img.height;
 							canvasContainer.appendChild(canvas);
 
-							images.push(img, canvas, file.name.split(".")[0]);
+							// images.push(img, canvas, file.name.split(".")[0]);
 							place_image(images.last());
 							allSameSize(images, files);
 						};
@@ -1136,40 +1154,52 @@
 						+ getIdentifier()
 						+ "Bitmap"
 						+ " [] PROGMEM = {"
+						+ "\n\t0x00,"
 						+ "\n" + output_string + "\n};\n\n"
 						+ "const GFXglyph "
 						+ getIdentifier()
 						+ "Glyphs [] PROGMEM = {\n";
 
 					var firstAschiiChar = document.getElementById("first-ascii-char").value;
+					var lastAschiiChar = document.getElementById("last-ascii-char").value;
 					// var xAdvance = image.canvas.width + parseInt(document.getElementById("x-advance").value);
-					var offset = 0;
+					var offset = 1; // At 0 is the empty char
 					code = "";
 
 					// GFXbitmapGlyph
-					images.each(function(image) {
-            const xAdvance = image.canvas.width + parseInt(document.getElementById("x-advance").value);
-            code += `\t{${offset}, ${image.canvas.width}, ${image.canvas.height}, ${xAdvance}, 0, -${image.canvas.height}}`
-						// code += "\t{ "
-						// 	+ offset + ", "
-						// 	+ image.canvas.width + ", "
-						// 	+ image.canvas.height + ", "
-						// 	+ xAdvance + ", 0, -50 }";
-							
-						if(image != images.last()){ code += ","; }
-						code += "// '" + image.glyph + "'\n";
-						offset += Math.ceil(image.canvas.width * image.canvas.height / 8);
-					});
+					// TODO: run on glyphs range
+					const DEFAULT_X_ADVANCE = 15;
+					const Y_ADVANCE = 50;
+
+					for (let char = +firstAschiiChar; char < +lastAschiiChar + 1; char++) {
+						const image = images.get().find(image => image.glyph.length === 1 && image.glyph.charCodeAt(0) === char);
+						if (image) {
+							// Found a glyph image for the char - use it
+							const xAdvance = image.canvas.width + parseInt(document.getElementById("x-advance").value);
+							code += `\t{${offset}, ${image.canvas.width}, ${image.canvas.height}, ${xAdvance}, 0, -${image.canvas.height}}`
+								
+							if (char !== +lastAschiiChar) { code += ","; }
+							code += ` // 0x${char.toString(16)} '${image.glyph}' '${image.name}'\n`;
+							offset += Math.ceil(image.canvas.width * image.canvas.height / 8);
+						} else {
+							// Glyph pic not found - use an empty glyph
+							code += `\t{   0,  1,  1, ${DEFAULT_X_ADVANCE}, 0,   0}`
+							if (char !== +lastAschiiChar) { 
+								code += ","; 
+							} else {
+								code += " "; 
+							}
+							code += ` // 0x${char.toString(16)}\n`;
+						}
+					}
 					code += "};\n";
 					output_string += code;
-
-          const Y_ADVANCE = 50;
 
           // GFXbitmapFont
           output_string += `const GFXfont ${getIdentifier()}Font PROGMEM = {
             \t(uint8_t  *)${getIdentifier()}Bitmap,
             \t(GFXglyph *)${getIdentifier()}Glyphs,
-            \t0x${(+firstAschiiChar).toString(16)}, 0x${(+firstAschiiChar + images.length() - 1).toString(16)}, ${Y_ADVANCE}
+            \t0x${(+firstAschiiChar).toString(16)}, 0x${(+lastAschiiChar).toString(16)}, ${Y_ADVANCE}
           };
           `;
           break;
