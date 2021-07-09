@@ -6,7 +6,7 @@
 # To manually generate single glyphs use this command:
 # convert -background none -fill black -font FrankRuhlLibre-Regular.ttf -pointsize 50 label:"ת" -colorspace gray -depth 1 154.png
 fontFile=FrankRuhlLibre-Bold.ttf
-fontSize=44
+fontSize=40
 
 # First latin
 for i in $(seq 32 127); 

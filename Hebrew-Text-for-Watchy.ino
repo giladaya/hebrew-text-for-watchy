@@ -1,17 +1,26 @@
 #include <Watchy.h> //include the Watchy library
 #include <Fonts/FreeSerifBold9pt7b.h>
-#include "FrankRuhlLibre_Regular44pt8b.h"
-#include "FrankRuhlLibre_Bold44pt8b.h"
+#include "FrankRuhlLibre_Regular40pt8b.h"
+#include "FrankRuhlLibre_Bold40pt8b.h"
 #include "HebrewAsciiCodes.h"
 
 #define TWELVE_HOURS true
 #define MAX_CHARS 20
 #define MARGIN_X 8
-#define Y_ADVANCE 48
+#define Y_ADVANCE 45
+#define MARK_CHANCE 3
 
-char *marks [8] = {"", "!", "?", ".", "...", ":", ",", "-"};
-char * getRandomMark (int maxIdx = 8) {
-  return marks[random(min(maxIdx, 8))];
+// sync once every 6 hours
+#define NTP_SYNC_INTERVAL 6 * 60
+RTC_DATA_ATTR int ntpSyncCounter = 0;
+
+#define MARKS_COUNT 7
+char *marks [MARKS_COUNT] = {"!", "?", ".", "...", ":", ",", "-"};
+char * getRandomMark (int maxIdx = MARKS_COUNT) {
+  if (random(MARK_CHANCE) == 0) {
+    return marks[random(min(maxIdx, MARKS_COUNT))];
+  }
+  return "";
 }
 
 void addMark(char * line1, char * line2, int maxIdx = 999) {
@@ -36,7 +45,7 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
       // words
       char zero[] = {SAMEKH, PE, ALEPH, 0};
       char one[] = {TAV, HET, ALEPH, 0};
-      char two[] = {MEM_FIN, YOD, TAV, SHIN, 0};
+      char two[] = {MEM_FIN, YOD, YOD, TAV, SHIN, 0};
       char three[] = {SHIN, VAV, LAMED, SHIN, 0};
       char four[] = {AYIN, BET, RESH, ALEPH, 0};
       char five[] = {SHIN, MEM, HET, 0};
@@ -160,7 +169,7 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
 
       // HOURS
       lines += 1;
-      display.setFont(&FrankRuhlLibre_Regular44pt8b);
+      display.setFont(&FrankRuhlLibre_Regular40pt8b);
 
       display.getTextBounds(hrLine1, 0, 0, &x1, &y1, &w, &h);
       display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
@@ -175,7 +184,7 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
 
       // MINUTES
       lines += 1;
-      display.setFont(&FrankRuhlLibre_Bold44pt8b);
+      display.setFont(&FrankRuhlLibre_Bold40pt8b);
 
       display.getTextBounds(mnLine1, 0, 0, &x1, &y1, &w, &h);
       display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
@@ -192,6 +201,14 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
       display.setFont(&FreeSerifBold9pt7b);
       display.setCursor(4, display.height() - 4);
       display.print(vBatRounded);
+
+      // NTP_SYNC
+      if (ntpSyncCounter >= NTP_SYNC_INTERVAL) {
+        syncNTP();
+        ntpSyncCounter = 0;
+      } else {
+        ntpSyncCounter++;
+      }
     }
 };
 
