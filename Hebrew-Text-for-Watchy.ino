@@ -1,12 +1,15 @@
 #include <Watchy.h> //include the Watchy library
 #include <Fonts/FreeSerifBold9pt7b.h>
-#include "FrankRuhlLibre_Regular40pt8b.h"
-#include "FrankRuhlLibre_Bold40pt8b.h"
+//#include "FrankRuhlLibre_Regular40pt8b.h"
+//#include "FrankRuhlLibre_Bold40pt8b.h"
+#include "Assistant_Regular40pt8b.h"
+#include "Assistant_Bold40pt8b.h"
 #include "HebrewAsciiCodes.h"
 
 #define TWELVE_HOURS true
 #define MAX_CHARS 20
 #define MARGIN_X 8
+#define MARGIN_TOP 6
 #define Y_ADVANCE 45
 #define MARK_CHANCE 3
 
@@ -169,30 +172,32 @@ class WatchFace : public Watchy { //inherit and extend Watchy class
 
       // HOURS
       lines += 1;
-      display.setFont(&FrankRuhlLibre_Regular40pt8b);
+      //display.setFont(&FrankRuhlLibre_Regular40pt8b);
+      display.setFont(&Assistant_Regular40pt_Font);
 
       display.getTextBounds(hrLine1, 0, 0, &x1, &y1, &w, &h);
-      display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
+      display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE + MARGIN_TOP);
       display.print(hrLine1);
 
       if (strlen(hrLine2) > 0) {
         lines += 1;
         display.getTextBounds(hrLine2, 0, 0, &x1, &y1, &w, &h);
-        display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
+        display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE + MARGIN_TOP);
         display.print(hrLine2);
       }
 
       // MINUTES
       lines += 1;
-      display.setFont(&FrankRuhlLibre_Bold40pt8b);
+      //display.setFont(&FrankRuhlLibre_Bold40pt8b);
+      display.setFont(&Assistant_Bold40pt_Font);
 
       display.getTextBounds(mnLine1, 0, 0, &x1, &y1, &w, &h);
-      display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
+      display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE + MARGIN_TOP);
       display.print(mnLine1);
       if (strlen(mnLine2) > 0) {
         lines += 1;
         display.getTextBounds(mnLine2, 0, 0, &x1, &y1, &w, &h);
-        display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE);
+        display.setCursor(display.width() - MARGIN_X - w, lines * Y_ADVANCE + MARGIN_TOP);
         display.print(mnLine2);
       }
 
